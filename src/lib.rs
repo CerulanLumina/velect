@@ -51,13 +51,13 @@ use alloc::{
 use core::{
     borrow::{Borrow, BorrowMut},
     cmp::Ordering,
+    fmt::{Debug, Formatter},
     ops::{Bound, Deref, Index, IndexMut, RangeBounds},
     slice::SliceIndex,
 };
 use delegate::delegate;
 
 // TODO: serde: Serialize, Deserialize
-// TODO: Debug, Default
 
 /// A wrapper around a [`Vec`] with selected item functionality.
 ///
@@ -532,6 +532,16 @@ impl<T> FromIterator<T> for Velect<T> {
             inner: Vec::from_iter(iter),
             selected_index: None,
         }
+    }
+}
+
+impl<T: Debug> Debug for Velect<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "Velect{{ selected_index: {:?}, inner: {:?} }}",
+            self.selected_index, self.inner
+        )
     }
 }
 
