@@ -1,167 +1,31 @@
-#![deny(broken_intra_doc_links)]
+#![deny(rustdoc::broken_intra_doc_links)]
 
 extern crate alloc;
 extern crate core;
 
-use alloc::borrow::Cow;
-use alloc::rc::Rc;
-use alloc::sync::Arc;
-use alloc::vec::Drain;
-use core::borrow::{Borrow, BorrowMut};
-use core::ops::{Deref, Index, IndexMut, RangeBounds};
-use core::slice::SliceIndex;
+use alloc::{borrow::Cow, rc::Rc, sync::Arc, vec::Drain};
+use core::{
+    borrow::{Borrow, BorrowMut},
+    cmp::Ordering,
+    ops::{Bound, Deref, Index, IndexMut, RangeBounds},
+    slice::SliceIndex,
+};
 use delegate::delegate;
-use std::cmp::Ordering;
-use std::ops::Bound;
 
 // TODO: serde: Serialize, Deserialize
 // TODO: Debug, Default
 
+/// A wrapper around a [`Vec`] with selected item functionality.
+///
+/// The selection logic is implemented by a stored index, which is updated
+/// whenever a mutating change is made to the underlying vector that necessitates it.
+///
+/// Use [`Velect::selected`] or [`Velect::selected_mut`] to retrieve a reference to the
+/// selected item.
 #[derive(Clone)]
 pub struct Velect<T> {
     inner: Vec<T>,
     selected_index: Option<usize>,
-}
-
-impl<'a, T: Copy + 'a> Extend<&'a T> for Velect<T> {
-    delegate! {
-        to self.inner {
-            fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I);
-        }
-    }
-}
-
-impl<T> Extend<T> for Velect<T> {
-    delegate! {
-        to self.inner {
-            fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I);
-        }
-    }
-}
-
-impl<'a, T: Clone> From<&'a Velect<T>> for Cow<'a, [T]> {
-    fn from(v: &'a Velect<T>) -> Cow<'a, [T]> {
-        (&v.inner).into()
-    }
-}
-
-impl<T: Clone, const N: usize> From<&[T; N]> for Velect<T> {
-    fn from(s: &[T; N]) -> Self {
-        Self {
-            inner: s.into(),
-            selected_index: None,
-        }
-    }
-}
-
-impl<T: Clone> From<&[T]> for Velect<T> {
-    fn from(s: &[T]) -> Self {
-        Self {
-            inner: s.into(),
-            selected_index: None,
-        }
-    }
-}
-
-impl<T: Clone, const N: usize> From<&mut [T; N]> for Velect<T> {
-    fn from(s: &mut [T; N]) -> Self {
-        Self {
-            inner: s.into(),
-            selected_index: None,
-        }
-    }
-}
-
-impl<T: Clone> From<&mut [T]> for Velect<T> {
-    fn from(s: &mut [T]) -> Self {
-        Self {
-            inner: s.into(),
-            selected_index: None,
-        }
-    }
-}
-
-impl<T> From<Box<[T]>> for Velect<T> {
-    fn from(s: Box<[T]>) -> Self {
-        Self {
-            inner: s.into(),
-            selected_index: None,
-        }
-    }
-}
-
-impl<'a, T> From<Cow<'a, [T]>> for Velect<T>
-where
-    [T]: ToOwned<Owned = Vec<T>>,
-{
-    fn from(s: Cow<'a, [T]>) -> Self {
-        Self {
-            inner: s.into(),
-            selected_index: None,
-        }
-    }
-}
-
-macro_rules! from_owned_inner {
-    ($($t: ty),*) => {
-        $(
-        impl<T> From<Velect<T>> for $t {
-            fn from(v: Velect<T>) -> $t {
-                v.inner.into()
-            }
-        }
-        )*
-    };
-}
-
-from_owned_inner!(Arc<[T]>, Box<[T]>, Rc<[T]>);
-
-impl<'a, T: Clone> From<Velect<T>> for Cow<'a, [T]> {
-    fn from(value: Velect<T>) -> Self {
-        Cow::Owned(value.inner)
-    }
-}
-
-impl<T, const N: usize> From<[T; N]> for Velect<T> {
-    fn from(value: [T; N]) -> Self {
-        Self {
-            inner: value.into(),
-            selected_index: None,
-        }
-    }
-}
-
-impl<T> FromIterator<T> for Velect<T> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        Self {
-            inner: Vec::from_iter(iter),
-            selected_index: None,
-        }
-    }
-}
-
-impl<T> Velect<T>
-where
-    T: Clone,
-{
-    delegate! {
-        to self.inner {
-            pub fn extend_from_slice(&mut self, other: &[T]);
-            pub fn extend_from_within<R>(&mut self, src: R) where R: core::ops::RangeBounds<usize>;
-        }
-    }
-
-    /// Resizes the underlying vector (see [`Vec::resize`]). If the selection is to be
-    /// truncated, resets it to unselected / `None`.
-    pub fn resize(&mut self, new_len: usize, value: T) -> Option<T> {
-        self.resize_with(new_len, || value.clone())
-    }
-}
-
-impl<T> Default for Velect<T> {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl<T> Velect<T> {
@@ -398,6 +262,30 @@ impl<T> Velect<T> {
     }
 }
 
+impl<T> Velect<T>
+where
+    T: Clone,
+{
+    delegate! {
+        to self.inner {
+            pub fn extend_from_slice(&mut self, other: &[T]);
+            pub fn extend_from_within<R>(&mut self, src: R) where R: core::ops::RangeBounds<usize>;
+        }
+    }
+
+    /// Resizes the underlying vector (see [`Vec::resize`]). If the selection is to be
+    /// truncated, resets it to unselected / `None`.
+    pub fn resize(&mut self, new_len: usize, value: T) -> Option<T> {
+        self.resize_with(new_len, || value.clone())
+    }
+}
+
+impl<T> Default for Velect<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Deref for Velect<T> {
     type Target = Vec<T>;
 
@@ -477,6 +365,123 @@ impl<T> IntoIterator for Velect<T> {
     type IntoIter = alloc::vec::IntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
+    }
+}
+
+impl<'a, T: Copy + 'a> Extend<&'a T> for Velect<T> {
+    delegate! {
+        to self.inner {
+            fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I);
+        }
+    }
+}
+
+impl<T> Extend<T> for Velect<T> {
+    delegate! {
+        to self.inner {
+            fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I);
+        }
+    }
+}
+
+impl<'a, T: Clone> From<&'a Velect<T>> for Cow<'a, [T]> {
+    fn from(v: &'a Velect<T>) -> Cow<'a, [T]> {
+        (&v.inner).into()
+    }
+}
+
+impl<T: Clone, const N: usize> From<&[T; N]> for Velect<T> {
+    fn from(s: &[T; N]) -> Self {
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
+    }
+}
+
+impl<T: Clone> From<&[T]> for Velect<T> {
+    fn from(s: &[T]) -> Self {
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
+    }
+}
+
+impl<T: Clone, const N: usize> From<&mut [T; N]> for Velect<T> {
+    fn from(s: &mut [T; N]) -> Self {
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
+    }
+}
+
+impl<T: Clone> From<&mut [T]> for Velect<T> {
+    fn from(s: &mut [T]) -> Self {
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
+    }
+}
+
+impl<T> From<Box<[T]>> for Velect<T> {
+    fn from(s: Box<[T]>) -> Self {
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
+    }
+}
+
+impl<'a, T> From<Cow<'a, [T]>> for Velect<T>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
+    fn from(s: Cow<'a, [T]>) -> Self {
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
+    }
+}
+
+macro_rules! from_owned_inner {
+    ($($t: ty),*) => {
+        $(
+        impl<T> From<Velect<T>> for $t {
+            fn from(v: Velect<T>) -> $t {
+                v.inner.into()
+            }
+        }
+        )*
+    };
+}
+
+from_owned_inner!(Arc<[T]>, Box<[T]>, Rc<[T]>);
+
+impl<'a, T: Clone> From<Velect<T>> for Cow<'a, [T]> {
+    fn from(value: Velect<T>) -> Self {
+        Cow::Owned(value.inner)
+    }
+}
+
+impl<T, const N: usize> From<[T; N]> for Velect<T> {
+    fn from(value: [T; N]) -> Self {
+        Self {
+            inner: value.into(),
+            selected_index: None,
+        }
+    }
+}
+
+impl<T> FromIterator<T> for Velect<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        Self {
+            inner: Vec::from_iter(iter),
+            selected_index: None,
+        }
     }
 }
 
