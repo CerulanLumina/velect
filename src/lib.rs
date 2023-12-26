@@ -1,4 +1,5 @@
 #![deny(rustdoc::broken_intra_doc_links)]
+#![no_std]
 
 //! # Velect: A Vec with item selection
 //!
@@ -40,7 +41,13 @@
 extern crate alloc;
 extern crate core;
 
-use alloc::{borrow::Cow, rc::Rc, sync::Arc, vec::Drain};
+use alloc::{
+    borrow::{Cow, ToOwned},
+    boxed::Box,
+    rc::Rc,
+    sync::Arc,
+    vec::{Drain, Vec},
+};
 use core::{
     borrow::{Borrow, BorrowMut},
     cmp::Ordering,
@@ -531,6 +538,7 @@ impl<T> FromIterator<T> for Velect<T> {
 #[cfg(test)]
 mod tests {
     use crate::Velect;
+    use alloc::vec;
 
     fn create_velect() -> Velect<&'static str> {
         let vec = vec![

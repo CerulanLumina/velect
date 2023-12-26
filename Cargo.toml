@@ -1,5 +1,13 @@
 [package]
 name = "velect"
+authors = ["CerulanLumina <CerulanLumina@users.noreply.github.com>"]
+description = "A Vec with item / index selection"
+license = "MPL-2"
+documentation = ""
+keywords = ["vec", "select", "index"]
+categories = ["data-structures"]
+homepage = "https://github.com/CerulanLumina/velect"
+repository = "https://github.com/CerulanLumina/velect"
 version = "0.1.0"
 edition = "2021"
 
