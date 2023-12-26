@@ -3,7 +3,6 @@ name = "velect"
 authors = ["CerulanLumina <CerulanLumina@users.noreply.github.com>"]
 description = "A Vec with item / index selection"
 license = "MPL-2.0"
-documentation = ""
 keywords = ["vec", "select", "index"]
 categories = ["data-structures"]
 repository = "https://github.com/CerulanLumina/velect"
