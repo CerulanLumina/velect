@@ -6,7 +6,6 @@ license = "MPL-2"
 documentation = ""
 keywords = ["vec", "select", "index"]
 categories = ["data-structures"]
-homepage = "https://github.com/CerulanLumina/velect"
 repository = "https://github.com/CerulanLumina/velect"
 version = "0.1.0"
 edition = "2021"
