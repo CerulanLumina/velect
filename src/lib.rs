@@ -32,16 +32,25 @@ impl<T> Velect<T> {
     // Methods borrowing self as &mut that should not affect selection
     delegate! {
         to self.inner {
+            /// See [`Vec::reserve`]
             pub fn reserve(&mut self, additional: usize); // Only affects capacity
+            /// See [`Vec::reserve_exact`]
             pub fn reserve_exact(&mut self, additional: usize); // Only affects capacity
+            /// See [`Vec::try_reserve`]
             pub fn try_reserve(&mut self, additional: usize) -> Result<(), alloc::collections::TryReserveError>; // Only affects capacity
+            /// See [`Vec::try_reserve_exact`]
             pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), alloc::collections::TryReserveError>; // Only affects capacity
+            /// See [`Vec::shrink_to_fit`]
             pub fn shrink_to_fit(&mut self); // Only affects capacity
+            /// See [`Vec::shrink_to`]
             pub fn shrink_to(&mut self, min_capacity: usize); // Only affects capacity
+            /// See [`Vec::push`]
             pub fn push(&mut self, value: T); // Only adds after all indices.
+            /// See [`Vec::append`]
             pub fn append(&mut self, other: &mut Vec<T>); // Only adds after all indices.
 
             // Consumes self, selection info dropped
+            /// See [`Vec::into_boxed_slice`]
             pub fn into_boxed_slice(self) -> Box<[T]>;
         }
     }
