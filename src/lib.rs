@@ -3,14 +3,14 @@
 extern crate alloc;
 extern crate core;
 
-use alloc::vec::Drain;
 use alloc::borrow::Cow;
-use core::borrow::{Borrow, BorrowMut};
-use delegate::delegate;
-use core::ops::{Deref, Index, IndexMut, RangeBounds};
-use alloc::sync::Arc;
 use alloc::rc::Rc;
+use alloc::sync::Arc;
+use alloc::vec::Drain;
+use core::borrow::{Borrow, BorrowMut};
+use core::ops::{Deref, Index, IndexMut, RangeBounds};
 use core::slice::SliceIndex;
+use delegate::delegate;
 use std::ops::Bound;
 
 // TODO: serde: Serialize, Deserialize
@@ -46,37 +46,58 @@ impl<'a, T: Clone> From<&'a Velect<T>> for Cow<'a, [T]> {
 
 impl<T: Clone, const N: usize> From<&[T; N]> for Velect<T> {
     fn from(s: &[T; N]) -> Self {
-        Self { inner: s.into(), selected_index: None }
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
     }
 }
 
 impl<T: Clone> From<&[T]> for Velect<T> {
     fn from(s: &[T]) -> Self {
-        Self { inner: s.into(), selected_index: None }
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
     }
 }
 
 impl<T: Clone, const N: usize> From<&mut [T; N]> for Velect<T> {
     fn from(s: &mut [T; N]) -> Self {
-        Self { inner: s.into(), selected_index: None }
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
     }
 }
 
 impl<T: Clone> From<&mut [T]> for Velect<T> {
     fn from(s: &mut [T]) -> Self {
-        Self { inner: s.into(), selected_index: None }
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
     }
 }
 
 impl<T> From<Box<[T]>> for Velect<T> {
     fn from(s: Box<[T]>) -> Self {
-        Self { inner: s.into(), selected_index: None }
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
     }
 }
 
-impl<'a, T> From<Cow<'a, [T]>> for Velect<T> where [T]: ToOwned<Owned = Vec<T>>{
+impl<'a, T> From<Cow<'a, [T]>> for Velect<T>
+where
+    [T]: ToOwned<Owned = Vec<T>>,
+{
     fn from(s: Cow<'a, [T]>) -> Self {
-        Self { inner: s.into(), selected_index: None }
+        Self {
+            inner: s.into(),
+            selected_index: None,
+        }
     }
 }
 
@@ -102,13 +123,19 @@ impl<'a, T: Clone> From<Velect<T>> for Cow<'a, [T]> {
 
 impl<T, const N: usize> From<[T; N]> for Velect<T> {
     fn from(value: [T; N]) -> Self {
-        Self { inner: value.into(), selected_index: None }
+        Self {
+            inner: value.into(),
+            selected_index: None,
+        }
     }
 }
 
 impl<T> FromIterator<T> for Velect<T> {
-    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
-        Self { inner: Vec::from_iter(iter), selected_index: None }
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        Self {
+            inner: Vec::from_iter(iter),
+            selected_index: None,
+        }
     }
 }
 
@@ -137,7 +164,6 @@ impl<T> Default for Velect<T> {
 }
 
 impl<T> Velect<T> {
-
     // Methods borrowing self as &mut that should not affect selection
     delegate! {
         to self.inner {
@@ -159,7 +185,9 @@ impl<T> Velect<T> {
     /// to be truncated, resets the selection to unselected / `None` and returns it as `Some(T)`.
     /// If not, `None` is returned.
     pub fn truncate(&mut self, len: usize) -> Option<T> {
-        if len > self.inner.len() { return None; }
+        if len > self.inner.len() {
+            return None;
+        }
         if let Some(selected_index) = self.selected_index {
             if selected_index >= len {
                 let ret = Some(self.inner.swap_remove(selected_index));
@@ -265,7 +293,10 @@ impl<T> Velect<T> {
 
     /// Resizes the underlying vector (see [`Vec::resize_with`]). If the selection is to be
     /// truncated, resets it to unselected / `None`.
-    pub fn resize_with<F>(&mut self, new_len: usize, f: F) -> Option<T> where F: FnMut() -> T {
+    pub fn resize_with<F>(&mut self, new_len: usize, f: F) -> Option<T>
+    where
+        F: FnMut() -> T,
+    {
         let ret = if let Some(selected_index) = self.selected_index {
             if selected_index >= new_len {
                 self.selected_index = None;
@@ -302,7 +333,12 @@ impl<T> Velect<T> {
 
     /// Creates a new [`Velect`] with a given underlying vector and an optional selection
     pub fn from_vec(v: Vec<T>, selected_index: Option<usize>) -> Velect<T> {
-        assert!(selected_index.is_none() || selected_index.unwrap() < v.len(), "Selection index is out of bounds. Index: {}, Length: {}", selected_index.unwrap(), v.len());
+        assert!(
+            selected_index.is_none() || selected_index.unwrap() < v.len(),
+            "Selection index is out of bounds. Index: {}, Length: {}",
+            selected_index.unwrap(),
+            v.len()
+        );
         Velect {
             inner: v,
             selected_index,
@@ -331,7 +367,12 @@ impl<T> Velect<T> {
     /// # Panics
     /// Panics when the index is out of bounds for the underlying vector.
     pub fn select_index(&mut self, index: usize) {
-        assert!(index < self.inner.len(), "Selection index is out of bounds. Index: {}, Length: {}", index, self.inner.len());
+        assert!(
+            index < self.inner.len(),
+            "Selection index is out of bounds. Index: {}, Length: {}",
+            index,
+            self.inner.len()
+        );
         self.selected_index = Some(index);
     }
 
@@ -342,9 +383,7 @@ impl<T> Velect<T> {
     pub fn select(&mut self, selected_index: Option<usize>) {
         match selected_index {
             Some(index) => self.select_index(index),
-            None => {
-                self.selected_index = None
-            }
+            None => self.selected_index = None,
         }
     }
 
@@ -363,7 +402,7 @@ impl<T> Deref for Velect<T> {
 }
 
 impl<T, I: SliceIndex<[T]>> Index<I> for Velect<T> {
-    type Output = <I as  SliceIndex<[T]>>::Output;
+    type Output = <I as SliceIndex<[T]>>::Output;
 
     delegate! {
         to self.inner {
@@ -441,7 +480,9 @@ mod tests {
     use crate::Velect;
 
     fn create_velect() -> Velect<&'static str> {
-        let vec = vec!["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+        let vec = vec![
+            "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+        ];
         Velect::from_vec(vec, None)
     }
 
@@ -451,7 +492,10 @@ mod tests {
         fn truncate_without_selection() {
             let mut velect = create_velect();
             velect.truncate(5);
-            assert!(velect.selected().is_none(), "Velect somehow got a selection from None")
+            assert!(
+                velect.selected().is_none(),
+                "Velect somehow got a selection from None"
+            )
         }
 
         #[test]
@@ -459,8 +503,15 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(4); // "five"
             let ret = velect.truncate(5);
-            assert!(ret.is_none(), "Velect returned on a truncate without affected the selected index");
-            assert_eq!(*velect.selected().unwrap(), "five", "Velect changed an index during truncation which should be unaffected");
+            assert!(
+                ret.is_none(),
+                "Velect returned on a truncate without affected the selected index"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "five",
+                "Velect changed an index during truncation which should be unaffected"
+            );
         }
 
         #[test]
@@ -470,7 +521,10 @@ mod tests {
             let ret = velect.truncate(5);
             assert!(ret.is_some(), "Velect did not return a truncated selection");
             assert_eq!(ret.unwrap(), "six", "Velect did not return the right item");
-            assert!(velect.selected().is_none(), "Velect did not reset the selected index");
+            assert!(
+                velect.selected().is_none(),
+                "Velect did not reset the selected index"
+            );
         }
     }
 
@@ -482,8 +536,15 @@ mod tests {
             velect.select_index(1); // "two"
             velect.swap_remove(0);
             velect.swap_remove(2);
-            assert!(velect.selected().is_some(), "Selection should not be affected");
-            assert_eq!(*velect.selected().unwrap(), "two", "Selected item should be unaffected");
+            assert!(
+                velect.selected().is_some(),
+                "Selection should not be affected"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "two",
+                "Selected item should be unaffected"
+            );
             assert_eq!(velect.len(), 8, "Items should have been removed");
             assert_eq!(velect[0], "ten", "swap_remove did not execute correctly.");
             assert_eq!(velect[1], "two", "swap_remove did not execute correctly.");
@@ -495,18 +556,28 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(4); // "five"
             assert_eq!(velect.swap_remove(4), "five");
-            assert!(velect.selected().is_none(), "swap_remove should leave no selection");
+            assert!(
+                velect.selected().is_none(),
+                "swap_remove should leave no selection"
+            );
         }
 
         #[test]
         fn swap_remove_affected_by_last() {
             let mut velect = create_velect();
             velect.select_index(velect.len() - 1);
-            assert_eq!(*velect.selected().unwrap(), "ten", "Selected item should be unaffected");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "ten",
+                "Selected item should be unaffected"
+            );
             velect.swap_remove(0);
-            assert_eq!(*velect.selected().unwrap(), "ten", "Selected item should be unaffected");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "ten",
+                "Selected item should be unaffected"
+            );
         }
-
     }
 
     mod insert {
@@ -518,7 +589,11 @@ mod tests {
             velect.select_index(4); // "five"
             velect.insert(5, "five point five");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "five", "insert should leave selection unaffected");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "five",
+                "insert should leave selection unaffected"
+            );
         }
 
         #[test]
@@ -527,7 +602,11 @@ mod tests {
             velect.select_index(4); // "five"
             velect.insert(4, "four point five");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "five", "insert should appropriately affect index");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "five",
+                "insert should appropriately affect index"
+            );
         }
 
         #[test]
@@ -536,7 +615,11 @@ mod tests {
             velect.select_index(6); // "seven"
             velect.insert(4, "four point five");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "seven", "insert should appropriately affect index");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "insert should appropriately affect index"
+            );
         }
     }
 
@@ -551,7 +634,11 @@ mod tests {
             assert_eq!(velect.remove(8), "ten");
             assert_eq!(velect.remove(7), "eight");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "seven", "remove should leave selection unaffected");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "remove should leave selection unaffected"
+            );
         }
 
         #[test]
@@ -561,15 +648,27 @@ mod tests {
 
             assert_eq!(velect.remove(0), "one");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "seven", "remove should not affect index when unnecessary");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "remove should not affect index when unnecessary"
+            );
 
             assert_eq!(velect.remove(0), "two");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "seven", "remove should not affect index when unnecessary");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "remove should not affect index when unnecessary"
+            );
 
             assert_eq!(velect.remove(1), "four");
             assert!(velect.selected().is_some(), "Selection should remain valid");
-            assert_eq!(*velect.selected().unwrap(), "seven", "remove should not affect index when unnecessary");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "remove should not affect index when unnecessary"
+            );
         }
 
         #[test]
@@ -578,7 +677,10 @@ mod tests {
             velect.select_index(6); // "seven";
 
             assert_eq!(velect.remove(6), "seven");
-            assert!(velect.selected().is_none(), "Removing selection should reset selection to None");
+            assert!(
+                velect.selected().is_none(),
+                "Removing selection should reset selection to None"
+            );
         }
 
         #[test]
@@ -587,27 +689,53 @@ mod tests {
             velect.select_index(6); // "seven";
 
             assert_eq!(velect.remove(0), "one");
-            assert_eq!(*velect.selected().unwrap(), "seven", "selection should remain valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "selection should remain valid"
+            );
 
             assert_eq!(velect.remove(0), "two");
-            assert_eq!(*velect.selected().unwrap(), "seven", "selection should remain valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "selection should remain valid"
+            );
 
             assert_eq!(velect.remove(0), "three");
-            assert_eq!(*velect.selected().unwrap(), "seven", "selection should remain valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "selection should remain valid"
+            );
 
             assert_eq!(velect.remove(0), "four");
-            assert_eq!(*velect.selected().unwrap(), "seven", "selection should remain valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "selection should remain valid"
+            );
 
             assert_eq!(velect.remove(0), "five");
-            assert_eq!(*velect.selected().unwrap(), "seven", "selection should remain valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "selection should remain valid"
+            );
 
             assert_eq!(velect.remove(0), "six");
-            assert_eq!(*velect.selected().unwrap(), "seven", "selection should remain valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "seven",
+                "selection should remain valid"
+            );
 
             assert_eq!(velect.remove(0), "seven");
-            assert!(velect.selected().is_none(), "Removing selection should reset selection to None");
+            assert!(
+                velect.selected().is_none(),
+                "Removing selection should reset selection to None"
+            );
         }
-
     }
 
     mod clear {
@@ -618,7 +746,11 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(2); // three;
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "three", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "three",
+                "selection is not valid"
+            );
 
             velect.clear();
             assert!(velect.is_empty(), "clear did not clear");
@@ -634,12 +766,27 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
-            assert_eq!(velect.pop().unwrap(), "ten", "pop did not remove the correct element");
+            assert_eq!(
+                velect.pop().unwrap(),
+                "ten",
+                "pop did not remove the correct element"
+            );
 
-            assert!(velect.selected().is_some(), "pop should not affect non-last selection");
-            assert_eq!(*velect.selected().unwrap(), "nine", "pop should not affect non-last selection");
+            assert!(
+                velect.selected().is_some(),
+                "pop should not affect non-last selection"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "pop should not affect non-last selection"
+            );
         }
 
         #[test]
@@ -647,14 +794,32 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
-            assert_eq!(velect.pop().unwrap(), "ten", "pop did not remove the correct element");
-            assert!(velect.selected().is_some(), "pop should not affect non-last selection");
-            assert_eq!(*velect.selected().unwrap(), "nine", "pop should not affect non-last selection");
+            assert_eq!(
+                velect.pop().unwrap(),
+                "ten",
+                "pop did not remove the correct element"
+            );
+            assert!(
+                velect.selected().is_some(),
+                "pop should not affect non-last selection"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "pop should not affect non-last selection"
+            );
 
-
-            assert_eq!(velect.pop().unwrap(), "nine", "pop did not remove the correct element");
+            assert_eq!(
+                velect.pop().unwrap(),
+                "nine",
+                "pop did not remove the correct element"
+            );
             assert!(velect.selected().is_none(), "pop should reset selection");
         }
 
@@ -681,8 +846,15 @@ mod tests {
                 velect.drain(6..);
             }
 
-            assert!(velect.selected().is_some(), "drain should not affect selection outside range");
-            assert_eq!(*velect.selected().unwrap(), "six", "drain should not affect selection outside range");
+            assert!(
+                velect.selected().is_some(),
+                "drain should not affect selection outside range"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "six",
+                "drain should not affect selection outside range"
+            );
         }
 
         #[test]
@@ -696,8 +868,15 @@ mod tests {
                 velect.drain(..5);
             }
 
-            assert!(velect.selected().is_some(), "drain should not affect selection outside range");
-            assert_eq!(*velect.selected().unwrap(), "six", "drain should not affect selection outside range");
+            assert!(
+                velect.selected().is_some(),
+                "drain should not affect selection outside range"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "six",
+                "drain should not affect selection outside range"
+            );
         }
 
         #[test]
@@ -711,8 +890,15 @@ mod tests {
                 velect.drain(..5);
             }
 
-            assert!(velect.selected().is_some(), "drain should not affect selection outside range");
-            assert_eq!(*velect.selected().unwrap(), "ten", "drain should not affect selection outside range");
+            assert!(
+                velect.selected().is_some(),
+                "drain should not affect selection outside range"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "ten",
+                "drain should not affect selection outside range"
+            );
         }
 
         #[test]
@@ -726,8 +912,15 @@ mod tests {
                 velect.drain(..=8);
             }
 
-            assert!(velect.selected().is_some(), "drain should not affect selection outside range");
-            assert_eq!(*velect.selected().unwrap(), "ten", "drain should not affect selection outside range");
+            assert!(
+                velect.selected().is_some(),
+                "drain should not affect selection outside range"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "ten",
+                "drain should not affect selection outside range"
+            );
         }
 
         #[test]
@@ -741,8 +934,15 @@ mod tests {
                 velect.drain(4..5);
             }
 
-            assert!(velect.selected().is_some(), "drain should not affect selection outside range");
-            assert_eq!(*velect.selected().unwrap(), "ten", "drain should not affect selection outside range");
+            assert!(
+                velect.selected().is_some(),
+                "drain should not affect selection outside range"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "ten",
+                "drain should not affect selection outside range"
+            );
         }
 
         #[test]
@@ -756,8 +956,15 @@ mod tests {
                 velect.drain(4..9);
             }
 
-            assert!(velect.selected().is_some(), "drain should not affect selection outside range");
-            assert_eq!(*velect.selected().unwrap(), "ten", "drain should not affect selection outside range");
+            assert!(
+                velect.selected().is_some(),
+                "drain should not affect selection outside range"
+            );
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "ten",
+                "drain should not affect selection outside range"
+            );
         }
 
         #[test]
@@ -771,9 +978,11 @@ mod tests {
                 velect.drain(3..6);
             }
 
-            assert!(velect.selected().is_none(), "drain should reset selection within range");
+            assert!(
+                velect.selected().is_none(),
+                "drain should reset selection within range"
+            );
         }
-
     }
 
     mod resize {
@@ -784,13 +993,25 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
             velect.resize(20, "more");
 
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
-            assert_eq!(velect.selected_index().unwrap(), 8, "resize (extend) should not change selected index");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
+            assert_eq!(
+                velect.selected_index().unwrap(),
+                8,
+                "resize (extend) should not change selected index"
+            );
         }
 
         #[test]
@@ -798,11 +1019,18 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
             velect.resize(8, "less");
 
-            assert!(velect.selected().is_none(), "resize (truncate) should deselect when less");
+            assert!(
+                velect.selected().is_none(),
+                "resize (truncate) should deselect when less"
+            );
         }
 
         #[test]
@@ -810,13 +1038,25 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
             velect.resize(9, "less");
 
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
-            assert_eq!(velect.selected_index().unwrap(), 8, "resize (truncate) should not change selected index when selection is still valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
+            assert_eq!(
+                velect.selected_index().unwrap(),
+                8,
+                "resize (truncate) should not change selected index when selection is still valid"
+            );
         }
     }
 
@@ -828,13 +1068,25 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
             velect.resize_with(20, || "more");
 
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
-            assert_eq!(velect.selected_index().unwrap(), 8, "resize_with (extend) should not change selected index");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
+            assert_eq!(
+                velect.selected_index().unwrap(),
+                8,
+                "resize_with (extend) should not change selected index"
+            );
         }
 
         #[test]
@@ -842,11 +1094,18 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
             velect.resize_with(8, || "less");
 
-            assert!(velect.selected().is_none(), "resize_with (truncate) should deselect when less");
+            assert!(
+                velect.selected().is_none(),
+                "resize_with (truncate) should deselect when less"
+            );
         }
 
         #[test]
@@ -854,12 +1113,20 @@ mod tests {
             let mut velect = create_velect();
             velect.select_index(8); // "nine"
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
 
             velect.resize_with(9, || "less");
 
             assert!(velect.selected().is_some());
-            assert_eq!(*velect.selected().unwrap(), "nine", "selection is not valid");
+            assert_eq!(
+                *velect.selected().unwrap(),
+                "nine",
+                "selection is not valid"
+            );
             assert_eq!(velect.selected_index().unwrap(), 8, "resize_with (truncate) should not change selected index when selection is still valid");
         }
     }
