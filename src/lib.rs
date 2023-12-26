@@ -29,6 +29,72 @@ pub struct Velect<T> {
 }
 
 impl<T> Velect<T> {
+    /// Creates a new [`Velect`] with an empty underlying vector and no selection.
+    pub fn new() -> Velect<T> {
+        Self::from_vec(Vec::new(), None)
+    }
+
+    /// Creates a new [`Velect`] with a given underlying vector and an optional selection
+    pub fn from_vec(v: Vec<T>, selected_index: Option<usize>) -> Velect<T> {
+        assert!(
+            selected_index.is_none() || selected_index.unwrap() < v.len(),
+            "Selection index is out of bounds. Index: {}, Length: {}",
+            selected_index.unwrap(),
+            v.len()
+        );
+        Velect {
+            inner: v,
+            selected_index,
+        }
+    }
+
+    /// Retrieves a reference to the selected element, or [`None`] if there is no selection.
+    pub fn selected(&self) -> Option<&T> {
+        self.selected_index.map(|a| &self.inner[a])
+    }
+
+    /// Retrieves a mutable reference to the selected element, or [`None`] if there is no selection.
+    pub fn selected_mut(&mut self) -> Option<&mut T> {
+        self.selected_index.map(|a| &mut self.inner[a])
+    }
+
+    /// Retrieves the currently selected index, or [`None`] if there is no selection.
+    /// This may change after mutations and should not be relied upon. Use [`Velect::selected`]
+    /// or [`Velect::selected_mut`] to retrieve a reference to selections.
+    pub fn selected_index(&self) -> Option<usize> {
+        self.selected_index
+    }
+
+    /// Select an index of the underlying vector.
+    ///
+    /// # Panics
+    /// Panics when the index is out of bounds for the underlying vector.
+    pub fn select_index(&mut self, index: usize) {
+        assert!(
+            index < self.inner.len(),
+            "Selection index is out of bounds. Index: {}, Length: {}",
+            index,
+            self.inner.len()
+        );
+        self.selected_index = Some(index);
+    }
+
+    /// Sets the selected index. Calls [`Velect::select_index`] when some.
+    ///
+    /// # Panics
+    /// Panics when the index is out of bounds for the underlying vector.
+    pub fn select(&mut self, selected_index: Option<usize>) {
+        match selected_index {
+            Some(index) => self.select_index(index),
+            None => self.selected_index = None,
+        }
+    }
+
+    /// Deselects the selection (selection retrieval methods will return [`None`]).
+    pub fn deselect(&mut self) {
+        self.selected_index = None;
+    }
+
     // Methods borrowing self as &mut that should not affect selection
     delegate! {
         to self.inner {
@@ -189,9 +255,6 @@ impl<T> Velect<T> {
         ret
     }
 
-    // TODO
-    // resize_with
-
     // Not doing
     // as_mut_slice
     // as_mut_ptr
@@ -203,72 +266,6 @@ impl<T> Velect<T> {
     // retain_mut
     // dedup_by_key
     // dedup_by
-
-    /// Creates a new [`Velect`] with an empty underlying vector and no selection.
-    pub fn new() -> Velect<T> {
-        Self::from_vec(Vec::new(), None)
-    }
-
-    /// Creates a new [`Velect`] with a given underlying vector and an optional selection
-    pub fn from_vec(v: Vec<T>, selected_index: Option<usize>) -> Velect<T> {
-        assert!(
-            selected_index.is_none() || selected_index.unwrap() < v.len(),
-            "Selection index is out of bounds. Index: {}, Length: {}",
-            selected_index.unwrap(),
-            v.len()
-        );
-        Velect {
-            inner: v,
-            selected_index,
-        }
-    }
-
-    /// Retrieves a reference to the selected element, or [`None`] if there is no selection.
-    pub fn selected(&self) -> Option<&T> {
-        self.selected_index.map(|a| &self.inner[a])
-    }
-
-    /// Retrieves a mutable reference to the selected element, or [`None`] if there is no selection.
-    pub fn selected_mut(&mut self) -> Option<&mut T> {
-        self.selected_index.map(|a| &mut self.inner[a])
-    }
-
-    /// Retrieves the currently selected index, or [`None`] if there is no selection.
-    /// This may change after mutations and should not be relied upon. Use [`Velect::selected`]
-    /// or [`Velect::selected_mut`] to retrieve a reference to selections.
-    pub fn selected_index(&self) -> Option<usize> {
-        self.selected_index
-    }
-
-    /// Select an index of the underlying vector.
-    ///
-    /// # Panics
-    /// Panics when the index is out of bounds for the underlying vector.
-    pub fn select_index(&mut self, index: usize) {
-        assert!(
-            index < self.inner.len(),
-            "Selection index is out of bounds. Index: {}, Length: {}",
-            index,
-            self.inner.len()
-        );
-        self.selected_index = Some(index);
-    }
-
-    /// Sets the selected index. Calls [`Velect::select_index`] when some.
-    ///
-    /// # Panics
-    /// Panics when the index is out of bounds for the underlying vector.
-    pub fn select(&mut self, selected_index: Option<usize>) {
-        match selected_index {
-            Some(index) => self.select_index(index),
-            None => self.selected_index = None,
-        }
-    }
-
-    /// Deselects the selection (selection retrieval methods will return [`None`]).
-    pub fn deselect(&mut self) {
-        self.selected_index = None;
-    }
 }
 
 impl<T> Velect<T>
