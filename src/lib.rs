@@ -11,6 +11,7 @@ use core::borrow::{Borrow, BorrowMut};
 use core::ops::{Deref, Index, IndexMut, RangeBounds};
 use core::slice::SliceIndex;
 use delegate::delegate;
+use std::cmp::Ordering;
 use std::ops::Bound;
 
 // TODO: serde: Serialize, Deserialize
@@ -234,10 +235,14 @@ impl<T> Velect<T> {
     /// selection to unselected / `None`.
     pub fn remove(&mut self, index: usize) -> T {
         if let Some(selected_index) = self.selected_index {
-            if selected_index > index {
-                *self.selected_index.as_mut().unwrap() -= 1;
-            } else if selected_index == index {
-                self.selected_index = None;
+            match selected_index.cmp(&index) {
+                Ordering::Greater => {
+                    *self.selected_index.as_mut().unwrap() -= 1;
+                }
+                Ordering::Equal => {
+                    self.selected_index = None;
+                }
+                Ordering::Less => {}
             }
         }
         self.inner.remove(index)
