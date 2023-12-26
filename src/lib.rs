@@ -1,5 +1,42 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 
+//! # Velect: A Vec with item selection
+//!
+//! [`Velect`] is a wrapper around a [`Vec`] with selected item functionality -
+//! which here means zero or one index from the vector is "selected" and can be
+//! retrieved easily without needing to track the index of the selected item.
+//!
+//! ```
+//! use velect::Velect;
+//! // Creates a Velect with "three" selected.
+//! let mut velect = Velect::from_vec(vec!["one", "two", "three", "four", "five"], Some(2));
+//! assert_eq!(*velect.selected().unwrap(), "three");
+//!
+//! // Change the selection to "four"
+//! velect.select_index(3);
+//! assert_eq!(*velect.selected().unwrap(), "four");
+//! ```
+//!
+//! Internally, velect tracks a selected index, which can be retrieved if desired, but
+//! velect also updates this index to maintain the same logical selection whenever the
+//! underlying vector is mutated:
+//!
+//! ```
+//! use velect::Velect;
+//! let mut velect = Velect::from_vec(vec!["one", "two", "three", "four", "five"], Some(2));
+//! assert_eq!(*velect.selected().unwrap(), "three");
+//! assert_eq!(velect.selected_index().unwrap(), 2);
+//!
+//! velect.remove(0);
+//! assert_eq!(*velect.selected().unwrap(), "three");
+//! assert_eq!(velect.selected_index().unwrap(), 1);
+//! ```
+//!
+//! A [`Velect`] also implements `Deref<Target = Vec<_>>`, which allows any immutable functions
+//! to be used transparently. Functions taking a mutable reference to self are re-implemented
+//! with selection-preserving logic before a delegating to the underlying vector. It also implements
+//! many of the same traits a regular `Vec` does, allowing it to be used in much the same way.
+
 extern crate alloc;
 extern crate core;
 
