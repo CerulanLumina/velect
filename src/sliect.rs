@@ -52,8 +52,23 @@ impl<'a, T> Sliect<'a, T> {
     }
 
     /// Sets the currently selected index
+    ///
+    /// # Panics
+    /// Panics when the index is out of bounds for the underlying slice.
     pub fn select_index(&mut self, index: Option<usize>) {
-        self.selected_index = index;
+        match index {
+            Some(index) => {
+                let len = self.inner.len();
+                if index < len {
+                    self.selected_index = Some(index);
+                } else {
+                    panic!("Index is out of bounds for Sliect: {index} >= {len}");
+                }
+            }
+            None => {
+                self.selected_index = None;
+            }
+        }
     }
 }
 
@@ -82,8 +97,23 @@ impl<'a, T> SliectMut<'a, T> {
     }
 
     /// Sets the currently selected index
+    ///
+    /// # Panics
+    /// Panics when the index is out of bounds for the underlying slice..
     pub fn select_index(&mut self, index: Option<usize>) {
-        self.selected_index = index;
+        match index {
+            Some(index) => {
+                let len = self.inner.len();
+                if index < len {
+                    self.selected_index = Some(index);
+                } else {
+                    panic!("Index is out of bounds for SliectMut: {index} >= {len}");
+                }
+            }
+            None => {
+                self.selected_index = None;
+            }
+        }
     }
 }
 
@@ -107,8 +137,16 @@ impl<'a, T> SliectDefinite<'a, T> {
     }
 
     /// Sets the currently selected index
+    ///
+    /// # Panics
+    /// Panics when the index is out of bounds for the underlying slice.
     pub fn select_index(&mut self, index: usize) {
-        self.selected_index = index;
+        let len = self.inner.len();
+        if index < len {
+            self.selected_index = index;
+        } else {
+            panic!("Index is out of bounds for SliectDefinite: {index} >= {len}");
+        }
     }
 }
 
@@ -137,7 +175,15 @@ impl<'a, T> SliectDefiniteMut<'a, T> {
     }
 
     /// Sets the currently selected index
+    ///
+    /// # Panics
+    /// Panics when the index is out of bounds for the underlying slice.
     pub fn select_index(&mut self, index: usize) {
-        self.selected_index = index;
+        let len = self.inner.len();
+        if index < len {
+            self.selected_index = index;
+        } else {
+            panic!("Index is out of bounds for SliectDefiniteMut: {index} >= {len}");
+        }
     }
 }
