@@ -162,6 +162,10 @@ impl<T> Velect<T> {
             // Consumes self, selection info dropped
             /// See [`Vec::into_boxed_slice`]
             pub fn into_boxed_slice(self) -> Box<[T]>;
+
+            // Elements in the slice can be altered but not added/removed.
+            /// See [`Vec::as_mut_slice`]
+            pub fn as_mut_slice(&mut self) -> &mut [T];
         }
     }
 
@@ -300,7 +304,6 @@ impl<T> Velect<T> {
     }
 
     // Not doing
-    // as_mut_slice
     // as_mut_ptr
     // set_len
     // split_off
