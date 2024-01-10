@@ -38,6 +38,8 @@
 //! with selection-preserving logic before a delegating to the underlying vector. It also implements
 //! many of the same traits a regular `Vec` does, allowing it to be used in much the same way.
 
+mod sliect;
+
 extern crate alloc;
 extern crate core;
 
@@ -56,6 +58,8 @@ use core::{
     slice::SliceIndex,
 };
 use delegate::delegate;
+
+pub use sliect::*;
 
 // TODO: serde: Serialize, Deserialize
 
