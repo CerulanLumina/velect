@@ -143,6 +143,26 @@ impl<T> Velect<T> {
         self.selected_index = None;
     }
 
+    /// Provides a temporary [`Sliect`] view of the Velect. The entire Velect composes the slice.
+    /// The selection is updated if the view's selection is updated.
+    pub fn with_sliect(&mut self, f: impl FnOnce(&mut Sliect<T>)) {
+        let index = self.selected_index;
+        let slice = self.inner.as_slice();
+        let mut sliect = Sliect::new_from_slice(slice, index);
+        f(&mut sliect);
+        self.selected_index = sliect.selected_index;
+    }
+
+    /// Provides a temporary [`SliectMut`] view of the Velect. The entire Velect composes the slice.
+    /// The selection is updated if the view's selection is updated.
+    pub fn with_sliect_mut(&mut self, f: impl FnOnce(&mut SliectMut<T>)) {
+        let index = self.selected_index;
+        let slice = self.inner.as_mut_slice();
+        let mut sliect = SliectMut::new_from_slice(slice, index);
+        f(&mut sliect);
+        self.selected_index = sliect.selected_index;
+    }
+
     // Methods borrowing self as &mut that should not affect selection
     delegate! {
         to self.inner {
